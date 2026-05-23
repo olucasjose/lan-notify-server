@@ -67,7 +67,12 @@ var sendCmd = &cobra.Command{
 			var err error
 			resolvedIP, resolvedPort, err = disc.ResolveTarget(ctx, target)
 			if err != nil {
-				log.Fatalf("Target '%s' not found on local network: %v", target, err)
+				fmt.Printf("\n❌ Erro: Não foi possível encontrar o dispositivo '@%s' na rede local.\n", target)
+				fmt.Println("💡 Dicas:")
+				fmt.Println("   - Verifique se o 'lan-notify server' está rodando no computador alvo.")
+				fmt.Println("   - O computador alvo está na mesma rede Wi-Fi?")
+				fmt.Println("   - Se o Android estiver bloqueando a busca (mDNS), tente digitar o IP direto (ex: lan-notify send \"msg\" 192.168.0.10)")
+				os.Exit(1)
 			}
 		}
 
@@ -109,7 +114,16 @@ var sendCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			log.Fatalf("Falha ao enviar notificação: %v", err)
+			if strings.Contains(err.Error(), "connection refused") {
+				fmt.Printf("\n❌ Erro: Conexão recusada pelo alvo %s:%d.\n", resolvedIP, resolvedPort)
+				fmt.Println("💡 Dica: Verifique se o comando 'lan-notify server' está ativo neste computador alvo.")
+			} else if strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "Timeout") {
+				fmt.Printf("\n❌ Erro: Tempo limite de conexão esgotado (Timeout) ao tentar acessar %s:%d.\n", resolvedIP, resolvedPort)
+				fmt.Println("💡 Dica: O Firewall do computador alvo está ligado? Verifique se a porta está liberada (ex: sudo ufw allow 42931/tcp).")
+			} else {
+				fmt.Printf("\n❌ Falha ao enviar notificação: %v\n", err)
+			}
+			os.Exit(1)
 		}
 
 		log.Println("✅ Notificação entregue com sucesso!")

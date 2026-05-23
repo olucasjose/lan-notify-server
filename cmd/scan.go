@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"lan-notify/internal/discovery"
@@ -23,7 +25,13 @@ var scanCmd = &cobra.Command{
 
 		devices, err := disc.Scan(ctx)
 		if err != nil {
-			log.Fatalf("Falha ao escanear a rede: %v", err)
+			if strings.Contains(err.Error(), "failed to join") || strings.Contains(err.Error(), "operation not permitted") {
+				fmt.Println("\n❌ Erro: Bloqueio de rede detectado (provavelmente pelo Android).")
+				fmt.Println("💡 Dica: O sistema operacional bloqueia varreduras Multicast (mDNS). O comando 'scan' não funciona neste ambiente.")
+				fmt.Println("         Para enviar mensagens, forneça o IP do computador alvo diretamente (ex: lan-notify send \"msg\" 192.168.0.10).")
+				os.Exit(1)
+			}
+			log.Fatalf("\n❌ Falha ao escanear a rede: %v", err)
 		}
 
 		if len(devices) == 0 {

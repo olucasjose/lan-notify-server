@@ -58,7 +58,11 @@ var serverCmd = &cobra.Command{
 		// 4. Initialize Native Notifier Engine
 		ntf, err := notifier.New()
 		if err != nil {
-			log.Fatalf("Failed to initialize native notifier: %v", err)
+			fmt.Println("\n❌ Erro Fatal: Falha ao inicializar o motor de notificações do sistema.")
+			fmt.Println("💡 Dica: Se você estiver rodando no Termux (Android), o comando 'server' não é suportado porque o sistema bloqueia conexões nativas D-Bus.")
+			fmt.Println("         Use o Termux apenas para enviar mensagens (comando 'send').")
+			fmt.Printf("\nDetalhes técnicos: %v\n", err)
+			os.Exit(1)
 		}
 
 		// 5. Initialize and Start HTTP Server (Injected dependencies)

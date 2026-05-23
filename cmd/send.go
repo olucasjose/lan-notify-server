@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -51,14 +52,23 @@ var sendCmd = &cobra.Command{
 			log.Fatalf("No target provided (use @target)")
 		}
 
-		// 3. Resolve Target via Discovery Service
-		disc := discovery.New()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		var resolvedIP string
+		var resolvedPort int
 
-		resolvedIP, resolvedPort, err := disc.ResolveTarget(ctx, target)
-		if err != nil {
-			log.Fatalf("Target '%s' not found on local network: %v", target, err)
+		// 3. Resolve Target (Direct IP or mDNS)
+		if net.ParseIP(target) != nil {
+			resolvedIP = target
+			resolvedPort = cfg.Port
+		} else {
+			disc := discovery.New()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+
+			var err error
+			resolvedIP, resolvedPort, err = disc.ResolveTarget(ctx, target)
+			if err != nil {
+				log.Fatalf("Target '%s' not found on local network: %v", target, err)
+			}
 		}
 
 		// 4. Determine Token to use

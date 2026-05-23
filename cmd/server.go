@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -43,6 +45,16 @@ var serverCmd = &cobra.Command{
 		defer shutdownDiscovery()
 		log.Printf("Service registered via mDNS as: %s on port %d", cfg.DeviceName, cfg.Port)
 
+		// Print Local IPs for direct connection
+		ips := getLocalIPs()
+		if len(ips) > 0 {
+			fmt.Println("\n📱 Para conectar diretamente sem mDNS (ex: via Termux), use um destes IPs:")
+			for _, ip := range ips {
+				fmt.Printf("   -> lan-notify send \"Sua mensagem\" @%s\n", ip)
+			}
+			fmt.Println()
+		}
+
 		// 4. Initialize Native Notifier Engine
 		ntf, err := notifier.New()
 		if err != nil {
@@ -68,4 +80,20 @@ var serverCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
+}
+
+// getLocalIPs returns a list of non-loopback IPv4 addresses
+func getLocalIPs() []string {
+	var ips []string
+	addrs, err := net.InterfaceAddrs()
+	if err == nil {
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil {
+					ips = append(ips, ipnet.IP.String())
+				}
+			}
+		}
+	}
+	return ips
 }

@@ -4,17 +4,31 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/hex"
 	"encoding/pem"
 	"math/big"
+	"os"
+	"path/filepath"
 	"time"
 )
 
-// GenerateEphemeralTLSConfig creates an in-memory self-signed TLS configuration.
-func GenerateEphemeralTLSConfig(hostName string) (*tls.Config, error) {
-	// Generate ECDSA key
+// LoadOrGeneratePersistentIdentity loads the TLS certificate and private key from disk.
+// If they do not exist, it generates a new self-signed certificate and saves them.
+func LoadOrGeneratePersistentIdentity(configDir string, hostName string) (*tls.Certificate, error) {
+	certPath := filepath.Join(configDir, "identity.crt")
+	keyPath := filepath.Join(configDir, "identity.key")
+
+	// Try to load existing
+	cert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err == nil {
+		return &cert, nil
+	}
+
+	// Generate new ECDSA key
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		return nil, err
@@ -30,13 +44,13 @@ func GenerateEphemeralTLSConfig(hostName string) (*tls.Config, error) {
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"LAN Notify Local Authority"},
+			Organization: []string{"LAN Notify Identity"},
 			CommonName:   hostName,
 		},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(365 * 24 * time.Hour), // 1 year
+		NotAfter:              time.Now().Add(10 * 365 * 24 * time.Hour), // 10 years
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageClientAuth},
 		BasicConstraintsValid: true,
 	}
 
@@ -46,23 +60,41 @@ func GenerateEphemeralTLSConfig(hostName string) (*tls.Config, error) {
 		return nil, err
 	}
 
-	// Encode to PEM
-	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	// Save cert to disk
+	certOut, err := os.OpenFile(certPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer certOut.Close()
+	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		return nil, err
+	}
 
-	// Encode private key to PEM
+	// Save key to disk
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
+	}
+	defer keyOut.Close()
 	privBytes, err := x509.MarshalECPrivateKey(privateKey)
 	if err != nil {
 		return nil, err
 	}
-	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: privBytes})
+	if err := pem.Encode(keyOut, &pem.Block{Type: "EC PRIVATE KEY", Bytes: privBytes}); err != nil {
+		return nil, err
+	}
 
-	// Load TLS certificate
-	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+	// Load the newly created pair
+	newCert, err := tls.LoadX509KeyPair(certPath, keyPath)
 	if err != nil {
 		return nil, err
 	}
 
-	return &tls.Config{
-		Certificates: []tls.Certificate{tlsCert},
-	}, nil
+	return &newCert, nil
+}
+
+// GetCertificateFingerprint calculates the SHA-256 fingerprint of an X509 certificate.
+func GetCertificateFingerprint(cert *x509.Certificate) string {
+	hash := sha256.Sum256(cert.Raw)
+	return hex.EncodeToString(hash[:])
 }

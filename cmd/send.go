@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -74,42 +73,14 @@ var sendCmd = &cobra.Command{
 			}
 		}
 
-		// 4. Determine Token to use
-		token := cfg.AuthToken // default to own token
-		if savedToken, ok := cfg.KnownPeers[target]; ok && savedToken != "" {
-			token = savedToken
-		}
-
 		req := client.NotificationRequest{
 			Title:   "Message from " + cfg.DeviceName,
 			Message: message,
 			Urgency: "normal",
 		}
 
-		// 5. Try Sending
-		err = client.SendNotification(resolvedIP, resolvedPort, token, req)
-
-		// If 401 Unauthorized, prompt for password
-		if err != nil && strings.Contains(err.Error(), "401") {
-			fmt.Print(i18n.T("prompt_auth_required", target))
-			fmt.Print(i18n.T("prompt_auth_input", target))
-
-			reader := bufio.NewReader(os.Stdin)
-			newToken, _ := reader.ReadString('\n')
-			newToken = strings.TrimSpace(newToken)
-
-			// Try again with new token
-			err = client.SendNotification(resolvedIP, resolvedPort, newToken, req)
-			if err == nil {
-				// Save it for future uses!
-				cfg.KnownPeers[target] = newToken
-				if saveErr := cfg.Save(); saveErr != nil {
-					fmt.Printf("%s: %v\n", i18n.T("warn_save_password"), saveErr)
-				} else {
-					fmt.Println(i18n.T("success_save_password"))
-				}
-			}
-		}
+		// 4. Try Sending
+		err = client.SendNotification(cfg, resolvedIP, resolvedPort, target, req)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "connection refused") {

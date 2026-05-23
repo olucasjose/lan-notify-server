@@ -11,7 +11,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:           "lan-notify",
-	Version:       "1.0.0",
+	Version:       "2.0.1",
 	Short:         i18n.T("cmd_root_short"),
 	Long:          i18n.T("cmd_root_long"),
 	SilenceErrors: true,

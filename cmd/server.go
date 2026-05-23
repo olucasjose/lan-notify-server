@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
@@ -31,10 +32,20 @@ var serverCmd = &cobra.Command{
 			log.Fatalf("%s: %v", i18n.T("err_load_config"), err)
 		}
 
-		// 2. Generate Ephemeral TLS Config
-		tlsConfig, err := security.GenerateEphemeralTLSConfig(cfg.DeviceName)
+		// 2. Load Persistent TLS Config
+		appDir, err := config.GetConfigDir()
+		if err != nil {
+			log.Fatalf("Failed to get config dir: %v", err)
+		}
+		
+		clientCert, err := security.LoadOrGeneratePersistentIdentity(appDir, cfg.DeviceName)
 		if err != nil {
 			log.Fatalf("%s: %v", i18n.T("err_tls_fail"), err)
+		}
+
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{*clientCert},
+			ClientAuth:   tls.RequestClientCert, // We request it to check pinning on endpoints
 		}
 
 		// 3. Initialize Discovery Service (mDNS)

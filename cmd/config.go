@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,25 +15,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// generateRandomToken creates a secure 16-byte hex token.
-func generateRandomToken() string {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
-		return "fallback_token_123"
-	}
-	return hex.EncodeToString(bytes)
-}
-
 var configCmd = &cobra.Command{
 	Use:   i18n.T("cmd_config_use"),
 	Short: i18n.T("cmd_config_short"),
 	Run: func(cmd *cobra.Command, args []string) {
-		configDir, err := os.UserConfigDir()
+		appDir, err := config.GetConfigDir()
 		if err != nil {
 			log.Fatalf("%s: %v", i18n.T("err_config_dir"), err)
 		}
 
-		appDir := filepath.Join(configDir, "lan-notify")
 		path := filepath.Join(appDir, "config.json")
 
 		// Inform if config already exists
@@ -57,25 +45,15 @@ var configCmd = &cobra.Command{
 			deviceName = hostname
 		}
 
-		// Get Auth Token
-		fmt.Print(i18n.T("prompt_auth_token"))
-		authToken, _ := reader.ReadString('\n')
-		authToken = strings.TrimSpace(authToken)
-		if authToken == "" {
-			authToken = generateRandomToken()
-			fmt.Print(i18n.T("msg_token_generated", authToken))
-		}
-
 		// Save Configuration
 		if err := os.MkdirAll(appDir, 0755); err != nil {
 			log.Fatalf("%s: %v", i18n.T("err_create_dir"), err)
 		}
 
 		cfg := config.Config{
-			DeviceName: deviceName,
-			Port:       42931,
-			AuthToken:  authToken,
-			KnownPeers: make(map[string]string),
+			DeviceName:  deviceName,
+			Port:        42931,
+			PinnedPeers: make(map[string]string),
 		}
 
 		file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)

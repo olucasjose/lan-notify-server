@@ -72,7 +72,7 @@ var configCmd = &cobra.Command{
 
 		cfg := config.Config{
 			DeviceName: deviceName,
-			Port:       8080,
+			Port:       42931,
 			AuthToken:  authToken,
 			KnownPeers: make(map[string]string),
 		}

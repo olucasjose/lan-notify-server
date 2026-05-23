@@ -55,6 +55,10 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
+	if cfg.Port == 0 {
+		cfg.Port = 42931
+	}
+
 	if cfg.KnownPeers == nil {
 		cfg.KnownPeers = make(map[string]string)
 	}

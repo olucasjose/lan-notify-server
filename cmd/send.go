@@ -19,7 +19,7 @@ var sendCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Load Configuration (to get the AuthToken)
-		cfg, err := config.Load("config.json")
+		cfg, err := config.Load()
 		if err != nil {
 			log.Fatalf("Failed to load config: %v", err)
 		}

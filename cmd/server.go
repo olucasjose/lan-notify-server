@@ -20,7 +20,7 @@ var serverCmd = &cobra.Command{
 	Short: "Starts the lan-notify daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Load Configuration
-		cfg, err := config.Load("config.json")
+		cfg, err := config.Load()
 		if err != nil {
 			log.Fatalf("Failed to load config: %v", err)
 		}

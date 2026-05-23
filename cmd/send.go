@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -21,6 +22,9 @@ var sendCmd = &cobra.Command{
 		// 1. Load Configuration (to get the AuthToken)
 		cfg, err := config.Load()
 		if err != nil {
+			if os.IsNotExist(err) {
+				log.Fatalf("❌ Configuração não encontrada em ~/.config/lan-notify.\n💡 Dica: Rode o comando 'lan-notify config' para configurar seu dispositivo pela primeira vez.")
+			}
 			log.Fatalf("Failed to load config: %v", err)
 		}
 

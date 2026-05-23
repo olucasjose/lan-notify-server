@@ -27,7 +27,7 @@ var sendCmd = &cobra.Command{
 		cfg, err := config.Load()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Fatalf(i18n.T("err_config_not_found"))
+				log.Fatal(i18n.T("err_config_not_found"))
 			}
 			log.Fatalf("%s: %v", i18n.T("err_load_config"), err)
 		}
@@ -46,11 +46,11 @@ var sendCmd = &cobra.Command{
 
 		message := strings.Join(messageParts, " ")
 		if message == "" {
-			log.Fatalf(i18n.T("err_no_message"))
+			log.Fatal(i18n.T("err_no_message"))
 		}
 
 		if target == "" {
-			log.Fatalf(i18n.T("err_no_target"))
+			log.Fatal(i18n.T("err_no_target"))
 		}
 
 		var resolvedIP string
@@ -68,7 +68,7 @@ var sendCmd = &cobra.Command{
 			var err error
 			resolvedIP, resolvedPort, err = disc.ResolveTarget(ctx, target)
 			if err != nil {
-				fmt.Printf(i18n.T("err_target_not_found"), target)
+				fmt.Print(i18n.T("err_target_not_found", target))
 				fmt.Println(i18n.T("err_target_not_found_tips"))
 				os.Exit(1)
 			}
@@ -91,8 +91,8 @@ var sendCmd = &cobra.Command{
 
 		// If 401 Unauthorized, prompt for password
 		if err != nil && strings.Contains(err.Error(), "401") {
-			fmt.Printf(i18n.T("prompt_auth_required"), target)
-			fmt.Printf(i18n.T("prompt_auth_input"), target)
+			fmt.Print(i18n.T("prompt_auth_required", target))
+			fmt.Print(i18n.T("prompt_auth_input", target))
 
 			reader := bufio.NewReader(os.Stdin)
 			newToken, _ := reader.ReadString('\n')
@@ -113,10 +113,10 @@ var sendCmd = &cobra.Command{
 
 		if err != nil {
 			if strings.Contains(err.Error(), "connection refused") {
-				fmt.Printf(i18n.T("err_conn_refused"), resolvedIP, resolvedPort)
+				fmt.Print(i18n.T("err_conn_refused", resolvedIP, resolvedPort))
 				fmt.Println(i18n.T("tip_conn_refused"))
 			} else if strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "Timeout") {
-				fmt.Printf(i18n.T("err_conn_timeout"), resolvedIP, resolvedPort)
+				fmt.Print(i18n.T("err_conn_timeout", resolvedIP, resolvedPort))
 				fmt.Println(i18n.T("tip_conn_timeout"))
 			} else {
 				fmt.Printf("%s: %v\n", i18n.T("err_send_fail"), err)

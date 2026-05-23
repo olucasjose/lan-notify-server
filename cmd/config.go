@@ -40,7 +40,7 @@ var configCmd = &cobra.Command{
 
 		// Inform if config already exists
 		if _, err := os.Stat(path); err == nil {
-			fmt.Printf(i18n.T("warn_config_exists"), path)
+			fmt.Print(i18n.T("warn_config_exists", path))
 		}
 
 		reader := bufio.NewReader(os.Stdin)
@@ -50,7 +50,7 @@ var configCmd = &cobra.Command{
 		if err != nil {
 			hostname = "my-device"
 		}
-		fmt.Printf(i18n.T("prompt_device_name"), hostname)
+		fmt.Print(i18n.T("prompt_device_name", hostname))
 		deviceName, _ := reader.ReadString('\n')
 		deviceName = strings.TrimSpace(deviceName)
 		if deviceName == "" {
@@ -63,7 +63,7 @@ var configCmd = &cobra.Command{
 		authToken = strings.TrimSpace(authToken)
 		if authToken == "" {
 			authToken = generateRandomToken()
-			fmt.Printf(i18n.T("msg_token_generated"), authToken)
+			fmt.Print(i18n.T("msg_token_generated", authToken))
 		}
 
 		// Save Configuration

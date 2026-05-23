@@ -26,7 +26,7 @@ var serverCmd = &cobra.Command{
 		cfg, err := config.Load()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Fatalf(i18n.T("err_config_not_found"))
+				log.Fatal(i18n.T("err_config_not_found"))
 			}
 			log.Fatalf("%s: %v", i18n.T("err_load_config"), err)
 		}
@@ -44,14 +44,14 @@ var serverCmd = &cobra.Command{
 			log.Fatalf("%s: %v", i18n.T("err_mdns_start_fail"), err)
 		}
 		defer shutdownDiscovery()
-		log.Printf(i18n.T("msg_service_registered"), cfg.DeviceName, cfg.Port)
+		log.Print(i18n.T("msg_service_registered", cfg.DeviceName, cfg.Port))
 
 		// Print Local IPs for direct connection
 		ips := getLocalIPs()
 		if len(ips) > 0 {
 			fmt.Println(i18n.T("msg_local_ips"))
 			for _, ip := range ips {
-				fmt.Printf(i18n.T("msg_local_ips_arrow"), ip)
+				fmt.Print(i18n.T("msg_local_ips_arrow", ip))
 			}
 			fmt.Println()
 		}

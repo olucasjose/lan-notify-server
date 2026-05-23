@@ -1,0 +1,14 @@
+# Binaries
+lan-notify
+
+# Configuration files with secrets
+config.json
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store

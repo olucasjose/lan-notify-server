@@ -22,7 +22,7 @@ func (n *LinuxNotifier) Notify(title, message string, opts NotifyOptions) error 
 	obj := n.conn.Object("org.freedesktop.Notifications", "/org/freedesktop/Notifications")
 
 	hints := make(map[string]dbus.Variant)
-	
+
 	// Map urgency
 	var urgency byte = 1 // Normal
 	if opts.Urgency == "low" {
@@ -37,14 +37,14 @@ func (n *LinuxNotifier) Notify(title, message string, opts NotifyOptions) error 
 	}
 
 	call := obj.Call("org.freedesktop.Notifications.Notify", 0,
-		"lan-notify",              // app_name
-		uint32(0),                 // replaces_id
-		"dialog-information",      // app_icon
-		title,                     // summary
-		message,                   // body
-		[]string{},                // actions
-		hints,                     // hints
-		int32(-1),                 // expire_timeout (-1 for default)
+		"lan-notify",         // app_name
+		uint32(0),            // replaces_id
+		"dialog-information", // app_icon
+		title,                // summary
+		message,              // body
+		[]string{},           // actions
+		hints,                // hints
+		int32(-1),            // expire_timeout (-1 for default)
 	)
 
 	if call.Err != nil {

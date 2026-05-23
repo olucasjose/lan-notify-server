@@ -12,17 +12,7 @@ var rootCmd = &cobra.Command{
 	Version: "1.0.0",
 	Short:   "LAN Notify é um sistema de notificação em rede local",
 	Long: `LAN Notify é um serviço em segundo plano (daemon) e um cliente CLI (linha de comando)
-para enviar e receber notificações desktop nativas através da rede local usando mDNS e HTTPS seguro.
-
-Dicas de Autocompletar:
-Para habilitar o [TAB] no terminal, gere o script correspondente ao seu shell.
-Exemplo Linux (Bash):
-  lan-notify completion bash | sudo tee /etc/bash_completion.d/lan-notify > /dev/null
-  exec bash
-
-Exemplo Termux (Android):
-  lan-notify completion bash > /data/data/com.termux/files/usr/etc/bash_completion.d/lan-notify
-  exit (Reinicie a sessão do terminal completamente)`,
+para enviar e receber notificações desktop nativas através da rede local usando mDNS e HTTPS seguro.`,
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

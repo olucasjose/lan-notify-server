@@ -14,6 +14,9 @@ type Service interface {
 
 	// ResolveTarget finds the IP and Port of a target instance on the network.
 	ResolveTarget(ctx context.Context, instanceName string) (ip string, port int, err error)
+
+	// Scan discovers all available instances of the service on the network.
+	Scan(ctx context.Context) ([]string, error)
 }
 
 // zeroconfService is the mDNS implementation of discovery.Service.
@@ -81,4 +84,29 @@ func (s *zeroconfService) ResolveTarget(ctx context.Context, instanceName string
 	}
 
 	return resolvedIP, resolvedPort, nil
+}
+
+func (s *zeroconfService) Scan(ctx context.Context) ([]string, error) {
+	resolver, err := zeroconf.NewResolver(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := make(chan *zeroconf.ServiceEntry)
+	var discovered []string
+
+	go func(results <-chan *zeroconf.ServiceEntry) {
+		for entry := range results {
+			discovered = append(discovered, entry.Instance)
+		}
+	}(entries)
+
+	err = resolver.Browse(ctx, s.serviceType, s.domain, entries)
+	if err != nil {
+		return nil, err
+	}
+
+	<-ctx.Done()
+
+	return discovered, nil
 }

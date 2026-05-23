@@ -74,6 +74,7 @@ var configCmd = &cobra.Command{
 			DeviceName: deviceName,
 			Port:       8080,
 			AuthToken:  authToken,
+			KnownPeers: make(map[string]string),
 		}
 
 		file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)

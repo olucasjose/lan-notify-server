@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -19,7 +21,7 @@ var sendCmd = &cobra.Command{
 	Short: "Sends a notification to a target device",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// 1. Load Configuration (to get the AuthToken)
+		// 1. Load Configuration
 		cfg, err := config.Load()
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -59,20 +61,48 @@ var sendCmd = &cobra.Command{
 			log.Fatalf("Target '%s' not found on local network: %v", target, err)
 		}
 
-		log.Printf("Found %s at %s:%d. Sending notification...", target, resolvedIP, resolvedPort)
+		// 4. Determine Token to use
+		token := cfg.AuthToken // default to own token
+		if savedToken, ok := cfg.KnownPeers[target]; ok && savedToken != "" {
+			token = savedToken
+		}
 
-		// 4. Send Notification via Client
 		req := client.NotificationRequest{
 			Title:   "Message from " + cfg.DeviceName,
 			Message: message,
 			Urgency: "normal",
 		}
 
-		if err := client.SendNotification(resolvedIP, resolvedPort, cfg.AuthToken, req); err != nil {
-			log.Fatalf("Failed to send notification: %v", err)
+		// 5. Try Sending
+		err = client.SendNotification(resolvedIP, resolvedPort, token, req)
+
+		// If 401 Unauthorized, prompt for password
+		if err != nil && strings.Contains(err.Error(), "401") {
+			fmt.Printf("🔒 O dispositivo @%s exige autenticação.\n", target)
+			fmt.Printf("Digite a senha do %s para se conectar: ", target)
+
+			reader := bufio.NewReader(os.Stdin)
+			newToken, _ := reader.ReadString('\n')
+			newToken = strings.TrimSpace(newToken)
+
+			// Try again with new token
+			err = client.SendNotification(resolvedIP, resolvedPort, newToken, req)
+			if err == nil {
+				// Save it for future uses!
+				cfg.KnownPeers[target] = newToken
+				if saveErr := cfg.Save(); saveErr != nil {
+					fmt.Printf("Aviso: Falha ao salvar a senha para uso futuro: %v\n", saveErr)
+				} else {
+					fmt.Println("🔑 Senha salva com sucesso!")
+				}
+			}
 		}
 
-		log.Println("Notification successfully delivered!")
+		if err != nil {
+			log.Fatalf("Falha ao enviar notificação: %v", err)
+		}
+
+		log.Println("✅ Notificação entregue com sucesso!")
 	},
 }
 

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"lan-notify/internal/config"
+	"lan-notify/internal/i18n"
 	"lan-notify/internal/notifier"
 )
 
@@ -46,7 +47,7 @@ func (s *HTTPServer) Start() error {
 		TLSConfig: s.tlsConfig,
 	}
 
-	log.Printf("Listening for HTTPS requests on :%d...", s.cfg.Port)
+	log.Print(i18n.T("msg_listening_https", s.cfg.Port))
 	return httpServer.ListenAndServeTLS("", "")
 }
 

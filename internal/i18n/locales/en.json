@@ -50,5 +50,16 @@
   "err_save_config": "Failed to save configuration",
   "cmd_root_short": "LAN Notify is a local network notification system",
   "cmd_root_long": "LAN Notify is a background service (daemon) and CLI client\nto send and receive native desktop notifications over the local network using mDNS and secure HTTPS.",
-  "err_read_input": "Error reading input"
+  "err_read_input": "Error reading input",
+  "err_root_execute": "Error",
+  "usage_prefix": "Usage:",
+  "usage_command": "command",
+  "usage_examples": "Examples:",
+  "usage_available_commands": "Available Commands:",
+  "usage_help_description": "Help about any command",
+  "usage_flags": "Flags:",
+  "usage_global_flags": "Global Flags:",
+  "usage_help_footer": "Use \"{{.CommandPath}} [%s] --help\" for more information about a command.",
+  "err_config_dir": "Failed to determine config directory",
+  "msg_listening_https": "Listening for HTTPS requests on :%d..."
 }

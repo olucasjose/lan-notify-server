@@ -32,7 +32,7 @@ var configCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configDir, err := os.UserConfigDir()
 		if err != nil {
-			log.Fatalf("Failed to determine config directory: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_config_dir"), err)
 		}
 
 		appDir := filepath.Join(configDir, "lan-notify")

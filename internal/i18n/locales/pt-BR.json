@@ -50,5 +50,16 @@
   "err_save_config": "Falha ao salvar configuração",
   "cmd_root_short": "LAN Notify é um sistema de notification em rede local",
   "cmd_root_long": "LAN Notify é um serviço em segundo plano (daemon) e um cliente CLI (linha de comando)\npara enviar e receber notificações desktop nativas através da rede local usando mDNS e HTTPS seguro.",
-  "err_read_input": "Erro ao ler a entrada"
+  "err_read_input": "Erro ao ler a entrada",
+  "err_root_execute": "Erro",
+  "usage_prefix": "Uso:",
+  "usage_command": "comando",
+  "usage_examples": "Exemplos:",
+  "usage_available_commands": "Comandos Disponíveis:",
+  "usage_help_description": "Exibe informações de ajuda para os comandos",
+  "usage_flags": "Flags:",
+  "usage_global_flags": "Flags Globais:",
+  "usage_help_footer": "Use \"{{.CommandPath}} [%s] --help\" para mais informações sobre um comando específico.",
+  "err_config_dir": "Falha ao determinar o diretório de configuração",
+  "msg_listening_https": "Ouvindo requisições HTTPS na porta :%d..."
 }

@@ -12,13 +12,24 @@ if [ -n "$PREFIX" ] && [ -d "$PREFIX/bin" ]; then
     DEST="$PREFIX/bin/lan-notify"
     mv lan-notify "$DEST"
     chmod +x "$DEST"
+    
+    # Configura Autocompletar no Termux
+    mkdir -p "$PREFIX/etc/bash_completion.d"
+    $DEST completion bash > "$PREFIX/etc/bash_completion.d/lan-notify"
+    echo "Autocompletar (TAB) configurado!"
 else
     echo "Ambiente Linux padrão detectado."
     DEST="/usr/local/bin/lan-notify"
     echo "Isso requer privilégios de root para gravar em $DEST"
     sudo mv lan-notify "$DEST"
     sudo chmod +x "$DEST"
+    
+    # Configura Autocompletar no Linux
+    sudo mkdir -p /etc/bash_completion.d
+    $DEST completion bash | sudo tee /etc/bash_completion.d/lan-notify > /dev/null
+    echo "Autocompletar (TAB) configurado!"
 fi
 
 echo "Sucesso! 'lan-notify' instalado em $DEST."
 echo "Você já pode executar o comando 'lan-notify' de qualquer lugar."
+echo "Nota: Reinicie o seu terminal ou digite 'exec bash' para o autocompletar fazer efeito."

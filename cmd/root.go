@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"os"
 
+	"lan-notify/internal/i18n"
+
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "lan-notify",
-	Version: "1.0.0",
-	Short:   "LAN Notify é um sistema de notificação em rede local",
-	Long: `LAN Notify é um serviço em segundo plano (daemon) e um cliente CLI (linha de comando)
-para enviar e receber notificações desktop nativas através da rede local usando mDNS e HTTPS seguro.`,
+	Use:           "lan-notify",
+	Version:       "1.0.0",
+	Short:         i18n.T("cmd_root_short"),
+	Long:          i18n.T("cmd_root_long"),
 	SilenceErrors: true,
 	SilenceUsage:  true,
 }

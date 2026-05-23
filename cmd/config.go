@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"lan-notify/internal/config"
+	"lan-notify/internal/i18n"
 
 	"github.com/spf13/cobra"
 )
@@ -26,8 +27,8 @@ func generateRandomToken() string {
 }
 
 var configCmd = &cobra.Command{
-	Use:   "config",
-	Short: "Configures the lan-notify application interactively",
+	Use:   i18n.T("cmd_config_use"),
+	Short: i18n.T("cmd_config_short"),
 	Run: func(cmd *cobra.Command, args []string) {
 		configDir, err := os.UserConfigDir()
 		if err != nil {
@@ -39,7 +40,7 @@ var configCmd = &cobra.Command{
 
 		// Inform if config already exists
 		if _, err := os.Stat(path); err == nil {
-			fmt.Printf("Aviso: Já existe uma configuração em %s. Ela será sobrescrita.\n", path)
+			fmt.Printf(i18n.T("warn_config_exists"), path)
 		}
 
 		reader := bufio.NewReader(os.Stdin)
@@ -49,7 +50,7 @@ var configCmd = &cobra.Command{
 		if err != nil {
 			hostname = "my-device"
 		}
-		fmt.Printf("Qual o nome deste dispositivo? [%s]: ", hostname)
+		fmt.Printf(i18n.T("prompt_device_name"), hostname)
 		deviceName, _ := reader.ReadString('\n')
 		deviceName = strings.TrimSpace(deviceName)
 		if deviceName == "" {
@@ -57,17 +58,17 @@ var configCmd = &cobra.Command{
 		}
 
 		// Get Auth Token
-		fmt.Printf("Digite uma senha de segurança (ou deixe em branco para gerar uma aleatória): ")
+		fmt.Print(i18n.T("prompt_auth_token"))
 		authToken, _ := reader.ReadString('\n')
 		authToken = strings.TrimSpace(authToken)
 		if authToken == "" {
 			authToken = generateRandomToken()
-			fmt.Printf("🔑 Senha aleatória gerada: %s\n", authToken)
+			fmt.Printf(i18n.T("msg_token_generated"), authToken)
 		}
 
 		// Save Configuration
 		if err := os.MkdirAll(appDir, 0755); err != nil {
-			log.Fatalf("Falha ao criar diretório de configuração: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_create_dir"), err)
 		}
 
 		cfg := config.Config{
@@ -79,17 +80,17 @@ var configCmd = &cobra.Command{
 
 		file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
-			log.Fatalf("Falha ao criar arquivo de configuração: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_create_file"), err)
 		}
 		defer file.Close()
 
 		encoder := json.NewEncoder(file)
 		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(cfg); err != nil {
-			log.Fatalf("Falha ao salvar configuração: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_save_config"), err)
 		}
 
-		fmt.Println("\n✅ Configuração salva com sucesso! O lan-notify já está pronto para uso.")
+		fmt.Println(i18n.T("msg_config_saved_success"))
 	},
 }
 

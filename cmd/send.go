@@ -13,22 +13,23 @@ import (
 	"lan-notify/internal/client"
 	"lan-notify/internal/config"
 	"lan-notify/internal/discovery"
+	"lan-notify/internal/i18n"
 
 	"github.com/spf13/cobra"
 )
 
 var sendCmd = &cobra.Command{
-	Use:   "send [message] [@target]",
-	Short: "Sends a notification to a target device",
+	Use:   i18n.T("cmd_send_use"),
+	Short: i18n.T("cmd_send_short"),
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Load Configuration
 		cfg, err := config.Load()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Fatalf("❌ Configuração não encontrada em ~/.config/lan-notify.\n💡 Dica: Rode o comando 'lan-notify config' para configurar seu dispositivo pela primeira vez.")
+				log.Fatalf(i18n.T("err_config_not_found"))
 			}
-			log.Fatalf("Failed to load config: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_load_config"), err)
 		}
 
 		var target string
@@ -45,11 +46,11 @@ var sendCmd = &cobra.Command{
 
 		message := strings.Join(messageParts, " ")
 		if message == "" {
-			log.Fatalf("No message provided")
+			log.Fatalf(i18n.T("err_no_message"))
 		}
 
 		if target == "" {
-			log.Fatalf("No target provided (use @target)")
+			log.Fatalf(i18n.T("err_no_target"))
 		}
 
 		var resolvedIP string
@@ -67,11 +68,8 @@ var sendCmd = &cobra.Command{
 			var err error
 			resolvedIP, resolvedPort, err = disc.ResolveTarget(ctx, target)
 			if err != nil {
-				fmt.Printf("\n❌ Erro: Não foi possível encontrar o dispositivo '@%s' na rede local.\n", target)
-				fmt.Println("💡 Dicas:")
-				fmt.Println("   - Verifique se o 'lan-notify server' está rodando no computador alvo.")
-				fmt.Println("   - O computador alvo está na mesma rede Wi-Fi?")
-				fmt.Println("   - Se o Android estiver bloqueando a busca (mDNS), tente digitar o IP direto (ex: lan-notify send \"msg\" 192.168.0.10)")
+				fmt.Printf(i18n.T("err_target_not_found"), target)
+				fmt.Println(i18n.T("err_target_not_found_tips"))
 				os.Exit(1)
 			}
 		}
@@ -93,8 +91,8 @@ var sendCmd = &cobra.Command{
 
 		// If 401 Unauthorized, prompt for password
 		if err != nil && strings.Contains(err.Error(), "401") {
-			fmt.Printf("🔒 O dispositivo @%s exige autenticação.\n", target)
-			fmt.Printf("Digite a senha do %s para se conectar: ", target)
+			fmt.Printf(i18n.T("prompt_auth_required"), target)
+			fmt.Printf(i18n.T("prompt_auth_input"), target)
 
 			reader := bufio.NewReader(os.Stdin)
 			newToken, _ := reader.ReadString('\n')
@@ -106,27 +104,27 @@ var sendCmd = &cobra.Command{
 				// Save it for future uses!
 				cfg.KnownPeers[target] = newToken
 				if saveErr := cfg.Save(); saveErr != nil {
-					fmt.Printf("Aviso: Falha ao salvar a senha para uso futuro: %v\n", saveErr)
+					fmt.Printf("%s: %v\n", i18n.T("warn_save_password"), saveErr)
 				} else {
-					fmt.Println("🔑 Senha salva com sucesso!")
+					fmt.Println(i18n.T("success_save_password"))
 				}
 			}
 		}
 
 		if err != nil {
 			if strings.Contains(err.Error(), "connection refused") {
-				fmt.Printf("\n❌ Erro: Conexão recusada pelo alvo %s:%d.\n", resolvedIP, resolvedPort)
-				fmt.Println("💡 Dica: Verifique se o comando 'lan-notify server' está ativo neste computador alvo.")
+				fmt.Printf(i18n.T("err_conn_refused"), resolvedIP, resolvedPort)
+				fmt.Println(i18n.T("tip_conn_refused"))
 			} else if strings.Contains(err.Error(), "context deadline exceeded") || strings.Contains(err.Error(), "Timeout") {
-				fmt.Printf("\n❌ Erro: Tempo limite de conexão esgotado (Timeout) ao tentar acessar %s:%d.\n", resolvedIP, resolvedPort)
-				fmt.Println("💡 Dica: O Firewall do computador alvo está ligado? Verifique se a porta está liberada (ex: sudo ufw allow 42931/tcp).")
+				fmt.Printf(i18n.T("err_conn_timeout"), resolvedIP, resolvedPort)
+				fmt.Println(i18n.T("tip_conn_timeout"))
 			} else {
-				fmt.Printf("\n❌ Falha ao enviar notificação: %v\n", err)
+				fmt.Printf("%s: %v\n", i18n.T("err_send_fail"), err)
 			}
 			os.Exit(1)
 		}
 
-		log.Println("✅ Notificação entregue com sucesso!")
+		log.Println(i18n.T("success_send"))
 	},
 }
 

@@ -10,6 +10,7 @@ import (
 
 	"lan-notify/internal/config"
 	"lan-notify/internal/discovery"
+	"lan-notify/internal/i18n"
 	"lan-notify/internal/notifier"
 	"lan-notify/internal/security"
 	"lan-notify/internal/server"
@@ -18,39 +19,39 @@ import (
 )
 
 var serverCmd = &cobra.Command{
-	Use:   "server",
-	Short: "Starts the lan-notify daemon",
+	Use:   i18n.T("cmd_server_use"),
+	Short: i18n.T("cmd_server_short"),
 	Run: func(cmd *cobra.Command, args []string) {
 		// 1. Load Configuration
 		cfg, err := config.Load()
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Fatalf("❌ Configuração não encontrada em ~/.config/lan-notify.\n💡 Dica: Rode o comando 'lan-notify config' para configurar seu dispositivo pela primeira vez.")
+				log.Fatalf(i18n.T("err_config_not_found"))
 			}
-			log.Fatalf("Failed to load config: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_load_config"), err)
 		}
 
 		// 2. Generate Ephemeral TLS Config
 		tlsConfig, err := security.GenerateEphemeralTLSConfig(cfg.DeviceName)
 		if err != nil {
-			log.Fatalf("Failed to generate TLS config: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_tls_fail"), err)
 		}
 
 		// 3. Initialize Discovery Service (mDNS)
 		disc := discovery.New()
 		shutdownDiscovery, err := disc.Register(cfg.DeviceName, cfg.Port)
 		if err != nil {
-			log.Fatalf("Failed to start mDNS server: %v", err)
+			log.Fatalf("%s: %v", i18n.T("err_mdns_start_fail"), err)
 		}
 		defer shutdownDiscovery()
-		log.Printf("Service registered via mDNS as: %s on port %d", cfg.DeviceName, cfg.Port)
+		log.Printf(i18n.T("msg_service_registered"), cfg.DeviceName, cfg.Port)
 
 		// Print Local IPs for direct connection
 		ips := getLocalIPs()
 		if len(ips) > 0 {
-			fmt.Println("\n📱 Para conectar diretamente sem mDNS (ex: via Termux), use um destes IPs:")
+			fmt.Println(i18n.T("msg_local_ips"))
 			for _, ip := range ips {
-				fmt.Printf("   -> lan-notify send \"Sua mensagem\" @%s\n", ip)
+				fmt.Printf(i18n.T("msg_local_ips_arrow"), ip)
 			}
 			fmt.Println()
 		}
@@ -58,10 +59,9 @@ var serverCmd = &cobra.Command{
 		// 4. Initialize Native Notifier Engine
 		ntf, err := notifier.New()
 		if err != nil {
-			fmt.Println("\n❌ Erro Fatal: Falha ao inicializar o motor de notificações do sistema.")
-			fmt.Println("💡 Dica: Se você estiver rodando no Termux (Android), o comando 'server' não é suportado porque o sistema bloqueia conexões nativas D-Bus.")
-			fmt.Println("         Use o Termux apenas para enviar mensagens (comando 'send').")
-			fmt.Printf("\nDetalhes técnicos: %v\n", err)
+			fmt.Println(i18n.T("err_fatal_init_notifier"))
+			fmt.Println(i18n.T("tip_fatal_init_termux"))
+			fmt.Printf(i18n.T("msg_tech_details")+": %v\n", err)
 			os.Exit(1)
 		}
 
@@ -70,7 +70,7 @@ var serverCmd = &cobra.Command{
 
 		go func() {
 			if err := httpSrv.Start(); err != nil {
-				log.Fatalf("HTTPS Server Error: %v", err)
+				log.Fatalf("%s: %v", i18n.T("err_https_server"), err)
 			}
 		}()
 
@@ -78,7 +78,7 @@ var serverCmd = &cobra.Command{
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
 		<-sig
-		log.Println("Shutting down...")
+		log.Println(i18n.T("msg_shutting_down"))
 	},
 }
 
